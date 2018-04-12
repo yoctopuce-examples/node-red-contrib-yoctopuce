@@ -1,0 +1,27 @@
+{
+  "name": "node-red-contrib-yoctopuce",
+  "version": "1.0.0",
+  "description": "Node-RED nodes to interact with Yoctopuce modules.",
+  "dependencies": {
+    "yoctolib-es2017": "1.10.30378"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "node-red"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yoctopuce-examples/node-red-contrib-yoctopuce.git"
+  },
+  "node-red": {
+    "nodes": {
+      "ynodes": "yoctopuce-nodes/ynodes.js",
+      "yoctohub": "yoctopuce-nodes/yoctohub.js"
+    }
+  },
+  "author": "Yoctopuce",
+  "bugs": {
+    "url": "https://github.com/yoctopuce-examples/node-red-contrib-yoctopuce/issues"
+  },
+  "homepage": "https://github.com/yoctopuce-examples/node-red-contrib-yoctopuce#readme"
+}

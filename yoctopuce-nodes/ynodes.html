@@ -1,0 +1,189 @@
+<script type="text/javascript">
+    RED.nodes.registerType('yoctopuce-function', {
+        category: 'Yoctopuce',
+        color: '#C0C0C0',
+        defaults: {
+            yoctohub: {value: "", type: "yoctohub"},
+            name: {value: ""},
+            hwid: {
+                value: "", required: true, validate: function (v) {
+                    return v.length > 0;
+                }
+            }
+        },
+        inputs: 0,
+        outputs: 1,
+        icon: "yoctopuce.png",
+        paletteLabel: "YFunction",
+        label: function () {
+            return this.name || "YFunction";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="yoctopuce-function">
+    <div class="form-row">
+        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-hwid"><i class="fa fa-tag"></i>Function hardware ID</label>
+        <input type="text" id="node-input-hwid" placeholder="HardwareID">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="yoctopuce-function">
+    <p>A Node-RED node to get live value of a Yoctopuce Function.</p>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType('yoctopuce-sensor', {
+        category: 'Yoctopuce',
+        color: '#C0C0C0',
+        defaults: {
+            yoctohub: {value: "", type: "yoctohub"},
+            name: {value: ""},
+            useTimeNot: {value: false},
+            hwid: {
+                value: "", required: true, validate: function (v) {
+                    return v.length > 0;
+                }
+            }
+        },
+        inputs: 0,
+        outputs: 1,
+        icon: "yoctopuce.png",
+        paletteLabel: "YSensor",
+        label: function () {
+            return this.name || "YSensor";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="yoctopuce-sensor">
+    <div class="form-row">
+        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-hwid"><i class="fa fa-tag"></i>YSensor hardware ID</label>
+        <input type="text" id="node-input-hwid" placeholder="HardwareID">
+    </div>
+    <div class="form-row">
+        <label for="node-input-useTimeNot"><i class="fa fa-tag"></i>Use Timed Notifications</label>
+        <input type="checkbox" id="node-input-useTimeNot" placeholder="TimedNotification">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="yoctopuce-sensor">
+    <p>A Node-RED node to get live value with Yoctopuce sensors (test).</p>
+</script>
+
+
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('yoctopuce-buzzer', {
+        category: 'Yoctopuce',
+        color: '#C0C0C0',
+        defaults: {
+            yoctohub: {value: '', type: "yoctohub"},
+            name: {value: ''},
+            command: {value: 'playNotes'},
+            hwid: {
+                value: '', required: true, validate: function (v) {
+                    return v.length > 0;
+                }
+            }
+        },
+        inputs: 1,
+        outputs: 0,
+        icon: "yoctopuce.png",
+        paletteLabel: "YBuzzer",
+        label: function () {
+            return this.name || "YBuzzer";
+        }
+    });
+</script>
+<script type="text/x-red" data-template-name="yoctopuce-buzzer">
+    <div class="form-row">
+        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
+    </div>
+    <div class="form-row">
+        <label for="node-input-hwid"><i class="fa fa-tag"></i>YBuzzer hardware ID</label>
+        <input type="text" id="node-input-hwid" placeholder="HardwareID">
+    </div>
+    <div class="form-row">
+        <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
+        <select name="speed" id="node-input-command" placeholder="Test">
+          <option value="playNotes" >Play notes</option>
+          <option value="oncePlaySeq">Play sequence</option>
+          <option value="set_frequency">Frequency</option>
+          <option value="set_volume">Volume</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+
+
+</script>
+<script type="text/x-red" data-help-name="yoctopuce-buzzer">
+    <p>A Node-RED node to control YBuzzer functions.</p>
+</script>
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('yoctopuce-relay', {
+        category: 'Yoctopuce',
+        color: '#C0C0C0',
+        defaults: {
+            yoctohub: {value: "", type: "yoctohub"},
+            name: {value: ""},
+            hwid: {
+                value: "", required: true, validate: function (v) {
+                    return v.length > 0;
+                }
+            }
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "yoctopuce.png",
+        paletteLabel: "YRelay",
+        label: function () {
+            return this.name || "YRelay";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="yoctopuce-relay">
+    <div class="form-row">
+        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-hwid"><i class="fa fa-tag"></i>YSensor hardware ID</label>
+        <input type="text" id="node-input-hwid" placeholder="HardwareID">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="yoctopuce-realy">
+    <p>A Node-RED node to toggle Yoctopuce relay output.</p>
+</script>

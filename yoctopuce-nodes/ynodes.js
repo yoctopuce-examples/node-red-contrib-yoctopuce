@@ -92,7 +92,6 @@ module.exports = function (RED) {
     RED.nodes.registerType("yoctopuce-sensor", UseYSensor);
 
 
-    require('yoctolib-es2017/yocto_relay.js');
 
 
     require('yoctolib-es2017/yocto_buzzer.js');
@@ -111,7 +110,7 @@ module.exports = function (RED) {
             } else {
                 buzzer = YBuzzer.FirstBuzzerInContext(node.yctx);
             }
-            node.setupFunNodeSate(lower_classname, false);
+            node.setupFunNodeSate(buzzer, false);
             node.ybuzzer = buzzer;
             node.on('input', function (msg) {
                 switch (node.command) {
@@ -125,7 +124,7 @@ module.exports = function (RED) {
                         node.ybuzzer.playNotes(msg.payload);
                         break;
                     default:
-                        node.warn('unknown command : ' + msg.payload);
+                        node.warn('unknown command : ' + node.command);
                 }
             });
         };
@@ -133,6 +132,341 @@ module.exports = function (RED) {
 
     RED.nodes.registerType('yoctopuce-buzzer', UseYBuzzer);
 
+    require('yoctolib-es2017/yocto_colorled.js');
+
+    function UseYColorLed(config)
+    {
+        UseYFunction.call(this, config);
+        this.ycolorled = null;
+        this.command = config.command;
+        this.msdelay = config.msdelay;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let colorled;
+            if (node.hwid) {
+                colorled = YColorLed.FindColorLedInContext(node.yctx, node.hwid);
+            } else {
+                colorled = YColorLed.FirstColorLedInContext(node.yctx);
+            }
+            node.setupFunNodeSate(colorled, false);
+            node.ycolorled = colorled;
+            node.on('input', function (msg) {
+                let data = msg.payload;
+                let color = data;
+                if (typeof data === "string") {
+                    if (data.substring(0, 1) === "#") {
+                        data = data.substring(1);
+                        color = parseInt(data, 16)
+                    } else if (color.substring(0, 2) === "0x") {
+                        data = data.substring(2);
+                        color = parseInt(data, 16)
+                    } else {
+                        color = parseInt(data)
+                    }
+                }
+                switch (node.command) {
+                    case 'set_rgbColor':
+                        if (node.msdelay === 0) {
+                            node.ycolorled.set_rgbColor(color);
+                        } else {
+                            node.ycolorled.rgbMove(color, node.msdelay);
+                        }
+                        break;
+                    case 'set_hslColor':
+                        if (node.msdelay === 0) {
+                            node.ycolorled.set_hslColor(color);
+                        } else {
+                            node.ycolorled.hslMove(color, node.msdelay);
+                        }
+                        break;
+                    default:
+                        node.warn('unknown command : ' + node.command);
+                }
+            });
+        };
+    }
+
+    RED.nodes.registerType('yoctopuce-colorled', UseYColorLed);
+
+    require('yoctolib-es2017/yocto_colorledcluster.js');
+
+    function UseYColorLedCluster(config)
+    {
+        UseYFunction.call(this, config);
+        this.ycolorledcluster = null;
+        this.command = config.command;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let colorledcluster;
+            if (node.hwid) {
+                colorledcluster = YColorLedCluster.FindColorLedClusterInContext(node.yctx, node.hwid);
+            } else {
+                colorledcluster = YColorLedCluster.FirstColorLedClusterInContext(node.yctx);
+            }
+            node.setupFunNodeSate(colorledcluster, false);
+            node.ycolorledcluster = colorledcluster;
+            node.on('input', async function (msg) {
+                if (node.command === 'startBlinkSeq') {
+                    node.ycolorledcluster.startBlinkSeq(msg.payload);
+                } else if (node.command === 'stopBlinkSeq') {
+                    node.ycolorledcluster.stopBlinkSeq(msg.payload);
+                } else {
+                    let data = msg.payload;
+                    let color = data;
+                    if (typeof data === "string") {
+                        if (data.substring(0, 1) === "#") {
+                            data = data.substring(1);
+                            color = parseInt(data, 16)
+                        } else if (color.substring(0, 2) === "0x") {
+                            data = data.substring(2);
+                            color = parseInt(data, 16)
+                        } else {
+                            color = parseInt(data)
+                        }
+                    }
+                    let count = await node.ycolorledcluster.get_activeLedCount();
+                    switch (node.command) {
+                        case 'set_rgbColor':
+                            node.ycolorledcluster.set_rgbColor(0, count, color);
+                            break;
+                        case 'set_hslColor':
+                            node.ycolorledcluster.set_hslColor(0, count, color);
+                            break;
+                        default:
+                            node.warn('unknown command : ' + node.command);
+                    }
+                }
+            });
+        };
+    }
+
+    RED.nodes.registerType('yoctopuce-colorledcluster', UseYColorLedCluster);
+
+    require('yoctolib-es2017/yocto_currentloopoutput.js');
+
+    function UseYCurrentLoopOutput(config)
+    {
+        UseYFunction.call(this, config);
+        this.ycurrentloopoutput = null;
+        this.command = config.command;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let currentloopoutput;
+            if (node.hwid) {
+                currentloopoutput = YCurrentLoopOutput.FindCurrentLoopOutputInContext(node.yctx, node.hwid);
+            } else {
+                currentloopoutput = YCurrentLoopOutput.FirstCurrentLoopOutputInContext(node.yctx);
+            }
+            node.setupFunNodeSate(currentloopoutput, false);
+            node.ycurrentloopoutput = currentloopoutput;
+            node.on('input', function (msg) {
+                switch (node.command) {
+                    case 'set_current':
+                        node.ycurrentloopoutput.set_current(msg.payload);
+                        break;
+
+                    default:
+                        node.warn('unknown command : ' + msg.payload);
+                }
+            });
+        };
+    }
+
+    RED.nodes.registerType('yoctopuce-currentloopoutput', UseYCurrentLoopOutput);
+
+
+    require('yoctolib-es2017/yocto_digitalio.js');
+
+    function UseYDigitalIO(config)
+    {
+        UseYFunction.call(this, config);
+        this.ydigitalio = null;
+        this.command = config.command;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let digitalio;
+            if (node.hwid) {
+                digitalio = YDigitalIO.FindDigitalIOInContext(node.yctx, node.hwid);
+            } else {
+                digitalio = YDigitalIO.FirstDigitalIOInContext(node.yctx);
+            }
+            node.setupFunNodeSate(digitalio, false);
+            node.ydigitalio = digitalio;
+            node.on('input', function (msg) {
+                switch (node.command) {
+                    case 'set_portState':
+                        node.ydigitalio.set_portState(msg.payload);
+                        break;
+                    default:
+                        node.warn('unknown command : ' + msg.payload);
+                }
+            });
+        };
+    }
+
+    RED.nodes.registerType('yoctopuce-digitalio', UseYDigitalIO);
+
+    require('yoctolib-es2017/yocto_display.js');
+
+    function UseYDisplay(config)
+    {
+        UseYFunction.call(this, config);
+        this.ydisplay = null;
+        this.command = config.command;
+        this.font = config.font;
+        this.w = 0;
+        this.h = 0;
+        this.layer2 = null;
+        var node = this;
+        this.onYoctHubReady = async function () {
+            // by default use any connected module suitable for the demo
+            let display;
+            if (node.hwid) {
+                display = YDisplay.FindDisplayInContext(node.yctx, node.hwid);
+            } else {
+                display = YDisplay.FirstDisplayInContext(node.yctx);
+            }
+            node.setupFunNodeSate(display, false);
+            node.ydisplay = display;
+            //clean up
+            await node.ydisplay.resetAll();
+
+            // retrieve the display size
+            node.w = await node.ydisplay.get_displayWidth();
+            node.h = await node.ydisplay.get_displayHeight();
+
+            // retrieve the first layer
+            node.layer2 = await node.ydisplay.get_displayLayer(2);
+            let layer3 = await node.ydisplay.get_displayLayer(3);
+            await layer3.clear();
+            await layer3.selectFont(node.font);
+            await node.layer2.selectFont(node.font);
+
+            node.on('input', async function (msg) {
+                switch (node.command) {
+                    case 'display':
+                        // display a text in the middle of the screen
+                        await node.layer2.selectColorPen(0);
+                        await node.layer2.drawBar(0, 0, node.w - 1, node.h - 1);
+                        await node.layer2.selectColorPen(0xffffff);
+                        await node.layer2.drawText(node.w / 2, node.h / 2, node.layer2.ALIGN_CENTER, msg.payload);
+                        await node.ydisplay.swapLayerContent(2, 3);
+                        break;
+                    case 'playSequence':
+                        node.ydisplay.playSequence(msg.payload);
+                        break;
+                    default:
+                        node.warn('unknown command : ' + msg.payload);
+                }
+            });
+        };
+    }
+
+    RED.nodes.registerType('yoctopuce-display', UseYDisplay);
+
+    require('yoctolib-es2017/yocto_led.js');
+
+    function UseYLed(config)
+    {
+        UseYFunction.call(this, config);
+        this.yled = null;
+        this.command = config.command;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let led;
+            if (node.hwid) {
+                led = YLed.FindLedInContext(node.yctx, node.hwid);
+            } else {
+                led = YLed.FirstLedInContext(node.yctx);
+            }
+            node.setupFunNodeSate(led, false);
+            node.yled = led;
+            node.on('input', function (msg) {
+                switch (node.command) {
+                    case 'set_luminosity':
+                        node.yled.set_luminosity(msg.payload);
+                        break;
+                    case 'set_state':
+                        switch (msg.payload.toUpperCase()) {
+                            case 'OFF':
+                                node.yled.set_power(YLed.POWER_OFF);
+                                break;
+                            case 'STILL':
+                                node.yled.set_power(YLed.POWER_ON);
+                                node.yled.set_blinking(YLed.BLINKING_STILL);
+                                break;
+                            case 'RELAX':
+                                node.yled.set_power(YLed.POWER_ON);
+                                node.yled.set_blinking(YLed.BLINKING_RELAX);
+                                break;
+                            case 'AWARE':
+                                node.yled.set_power(YLed.POWER_ON);
+                                node.yled.set_blinking(YLed.BLINKING_AWARE);
+                                break;
+                            case 'RUN':
+                                node.yled.set_power(YLed.POWER_ON);
+                                node.yled.set_blinking(YLed.BLINKING_RUN);
+                                break;
+                            case 'CALL':
+                                node.yled.set_power(YLed.POWER_ON);
+                                node.yled.set_blinking(YLed.BLINKING_CALL);
+                                break;
+                            case 'PANIC':
+                                node.yled.set_power(YLed.POWER_ON);
+                                node.yled.set_blinking(YLed.BLINKING_PANIC);
+                                break;
+                            default:
+                                node.warn('unknown blinking : ' + msg.payload);
+                                break;
+                        }
+                        break;
+                    default:
+                        node.warn('unknown command : ' + node.command);
+                }
+            });
+        };
+    }
+
+    RED.nodes.registerType('yoctopuce-led', UseYLed);
+
+    require('yoctolib-es2017/yocto_pwmoutput.js');
+    function UseYPwmOutput(config)
+    {
+        UseYFunction.call(this, config);
+        this.ypwmoutput = null;
+        this.command = config.command;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let pwmoutput;
+            if (node.hwid) {
+                pwmoutput = YPwmOutput.FindPwmOutputInContext(node.yctx, node.hwid);
+            } else {
+                pwmoutput = YPwmOutput.FirstPwmOutputInContext(node.yctx);
+            }
+            node.setupFunNodeSate(pwmoutput, false);
+            node.ypwmoutput = pwmoutput;
+            node.on('input', function (msg) {
+                switch (node.command) {
+                    case 'set_frequency':
+                        node.ypwmoutput.set_frequency(msg.payload);
+                        break;
+                    case 'set_dutyCycle':
+                        node.ypwmoutput.set_dutyCycle(msg.payload);
+                        break;
+                    default:
+                        node.warn('unknown command : ' + node.command);
+                }
+            });
+        };
+    }
+    RED.nodes.registerType('yoctopuce-pwmoutput', UseYPwmOutput);
+    require('yoctolib-es2017/yocto_relay.js');
     function UseYRelay(config)
     {
         UseYFunction.call(this, config);
@@ -147,7 +481,7 @@ module.exports = function (RED) {
             } else {
                 relay = YRelay.FirstRelayInContext(node.yctx);
             }
-            node.setupFunNodeSate(relay, true);
+            node.setupFunNodeSate(relay, false);
             node.yrelay = relay;
             node.on('input', function (msg) {
                 switch (msg.payload.toUpperCase()) {
@@ -164,8 +498,7 @@ module.exports = function (RED) {
                         node.yrelay.set_output(YRelay.OUTPUT_OFF);
                         break;
                     default:
-                        node.warn("unknown state : " + msg.payload);
-
+                        node.warn('unknown command : ' + node.command);
                 }
 
             });
@@ -173,6 +506,6 @@ module.exports = function (RED) {
         };
 
     }
-
-    RED.nodes.registerType("yoctopuce-relay", UseYRelay);
+    RED.nodes.registerType('yoctopuce-relay', UseYRelay);
+//--- (end of YRelay implementation)
 }

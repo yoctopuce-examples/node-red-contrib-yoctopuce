@@ -89,8 +89,8 @@ module.exports = function (RED) {
 
     }
 
-    RED.nodes.registerType("yoctopuce-function", UseYFunction);
-    RED.nodes.registerType("yoctopuce-sensor", UseYSensor);
+    RED.nodes.registerType("YFunction", UseYFunction);
+    RED.nodes.registerType("YSensor", UseYSensor);
 
 
     require('yoctolib-es2017/yocto_buzzer.js');
@@ -129,7 +129,7 @@ module.exports = function (RED) {
         };
     }
 
-    RED.nodes.registerType('yoctopuce-buzzer', UseYBuzzer);
+    RED.nodes.registerType('YBuzzer', UseYBuzzer);
 
     require('yoctolib-es2017/yocto_colorled.js');
 
@@ -186,7 +186,7 @@ module.exports = function (RED) {
         };
     }
 
-    RED.nodes.registerType('yoctopuce-colorled', UseYColorLed);
+    RED.nodes.registerType('YColorLed', UseYColorLed);
 
     require('yoctolib-es2017/yocto_colorledcluster.js');
 
@@ -241,7 +241,7 @@ module.exports = function (RED) {
         };
     }
 
-    RED.nodes.registerType('yoctopuce-colorledcluster', UseYColorLedCluster);
+    RED.nodes.registerType('YColorLedCluster', UseYColorLedCluster);
 
     require('yoctolib-es2017/yocto_currentloopoutput.js');
 
@@ -274,7 +274,7 @@ module.exports = function (RED) {
         };
     }
 
-    RED.nodes.registerType('yoctopuce-currentloopoutput', UseYCurrentLoopOutput);
+    RED.nodes.registerType('YCurrentLoopOutput', UseYCurrentLoopOutput);
 
 
     require('yoctolib-es2017/yocto_digitalio.js');
@@ -307,7 +307,7 @@ module.exports = function (RED) {
         };
     }
 
-    RED.nodes.registerType('yoctopuce-digitalio', UseYDigitalIO);
+    RED.nodes.registerType('YDigitalIO', UseYDigitalIO);
 
     require('yoctolib-es2017/yocto_display.js');
 
@@ -365,7 +365,7 @@ module.exports = function (RED) {
         };
     }
 
-    RED.nodes.registerType('yoctopuce-display', UseYDisplay);
+    RED.nodes.registerType('YDisplay', UseYDisplay);
 
     require('yoctolib-es2017/yocto_led.js');
 
@@ -431,7 +431,7 @@ module.exports = function (RED) {
         };
     }
 
-    RED.nodes.registerType('yoctopuce-led', UseYLed);
+    RED.nodes.registerType('YLed', UseYLed);
 
     require('yoctolib-es2017/yocto_pwmoutput.js');
 
@@ -466,7 +466,7 @@ module.exports = function (RED) {
         };
     }
 
-    RED.nodes.registerType('yoctopuce-pwmoutput', UseYPwmOutput);
+    RED.nodes.registerType('YPwmOutput', UseYPwmOutput);
     require('yoctolib-es2017/yocto_relay.js');
 
     function UseYRelay(config)
@@ -474,7 +474,6 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.yrelay = null;
         this.command = config.command;
-        this.msdelay = config.msdelay;
         var node = this;
 
         this.onYoctHubReady = function () {
@@ -525,13 +524,14 @@ module.exports = function (RED) {
 
     }
 
-    RED.nodes.registerType('yoctopuce-relay', UseYRelay);
-
+    RED.nodes.registerType('YRelay', UseYRelay);
 
     require('yoctolib-es2017/yocto_serialport.js');
-    function UseYSerialPort(config) {
+    function UseYSerialPort(config)
+    {
         UseYFunction.call(this, config);
         this.yserialport = null;
+        this.command = config.command;
         var node = this;
         this.onYoctHubReady = function () {
             // by default use any connected module suitable for the demo
@@ -541,31 +541,159 @@ module.exports = function (RED) {
             } else {
                 serialport = YSerialPort.FirstSerialPortInContext(node.yctx);
             }
-            node.setupFunNodeSate(lower_classname, false);
+            node.setupFunNodeSate(serialport, false);
             node.yserialport = serialport;
             node.on('input', function (msg) {
                 switch (node.command) {
-                    case 'set_currentJob':
-                        node.yserialport.set_currentJob(msg.payload);
+                    case 'writeByte':
+                        node.yserialport.writeByte(msg.payload);
                         break;
-                    case 'set_startupJob':
-                        node.yserialport.set_startupJob(msg.payload);
+                    case 'writeStr':
+                        node.yserialport.writeStr(msg.payload);
                         break;
-                    case 'set_voltageLevel':
-                        node.yserialport.set_voltageLevel(msg.payload);
+                    case 'writeBin':
+                        node.yserialport.writeBin(msg.payload);
                         break;
-                    case 'set_protocol':
-                        node.yserialport.set_protocol(msg.payload);
+                    case 'writeHex':
+                        node.yserialport.writeHex(msg.payload);
                         break;
-                    case 'set_serialMode':
-                        node.yserialport.set_serialMode(msg.payload);
+                    case 'writeLine':
+                        node.yserialport.writeLine(msg.payload);
+                        break;
+                    case 'writeMODBUS':
+                        node.yserialport.writeMODBUS(msg.payload);
                         break;
                     default:
-                        node.warn('unknown command : ' + msg.payload);
+                        node.warn('unknown command : ' + node.command);
                 }
             });
         };
     }
-    RED.nodes.registerType('yoctopuce-serialport', UseYSerialPort);
+    RED.nodes.registerType('YSerialPort', UseYSerialPort);
+
+
+    require('yoctolib-es2017/yocto_servo.js');
+    function UseYServo(config)
+    {
+        UseYFunction.call(this, config);
+        this.yservo = null;
+        this.msdelay = config.msdelay;
+
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let servo;
+            if (node.hwid) {
+                servo = YServo.FindServoInContext(node.yctx, node.hwid);
+            } else {
+                servo = YServo.FirstServoInContext(node.yctx);
+            }
+            node.setupFunNodeSate(servo, false);
+            node.yservo = servo;
+            node.on('input', function (msg) {
+                if (node.msdelay > 0) {
+                    node.yservo.move(msg.payload, node.msdelay);
+                }else {
+                    node.yservo.set_position(msg.payload);
+                }
+            });
+        };
+    }
+    RED.nodes.registerType('YServo', UseYServo);
+
+    require('yoctolib-es2017/yocto_voltageoutput.js');
+    function UseYVoltageOutput(config)
+    {
+        UseYFunction.call(this, config);
+        this.yvoltageoutput = null;
+        this.msdelay = config.msdelay;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let voltageoutput;
+            if (node.hwid) {
+                voltageoutput = YVoltageOutput.FindVoltageOutputInContext(node.yctx, node.hwid);
+            } else {
+                voltageoutput = YVoltageOutput.FirstVoltageOutputInContext(node.yctx);
+            }
+            node.setupFunNodeSate(voltageoutput, false);
+            node.yvoltageoutput = voltageoutput;
+            node.on('input', function (msg) {
+                if (node.msdelay > 0) {
+                    node.yvoltageoutput.voltageMove(msg.payload, node.msdelay)
+                }else {
+                    node.yvoltageoutput.set_currentVoltage(msg.payload);
+                }
+            });
+        };
+    }
+    RED.nodes.registerType('YVoltageOutput', UseYVoltageOutput);
+
+    require('yoctolib-es2017/yocto_watchdog.js');
+    function UseYWatchdog(config)
+    {
+        UseYFunction.call(this, config);
+        this.ywatchdog = null;
+        this.command = config.command;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let watchdog;
+            if (node.hwid) {
+                watchdog = YWatchdog.FindWatchdogInContext(node.yctx, node.hwid);
+            } else {
+                watchdog = YWatchdog.FirstWatchdogInContext(node.yctx);
+            }
+            node.setupFunNodeSate(watchdog, false);
+            node.ywatchdog = watchdog;
+            node.on('input', function (msg) {
+                let val = msg.payload;
+                switch (node.command) {
+                    case 'set_state':
+                        if (typeof val === "string") {
+                            val = val.toLowerCase();
+                            if (val === 'b') {
+                                val = YWatchdog.STATE_B;
+                            } else {
+                                val = YWatchdog.STATE_A;
+                            }
+                        }
+                        node.ywatchdog.set_state(val);
+                        break;
+                    case 'set_output':
+                        if (typeof val === "string") {
+                            val = val.toLowerCase();
+                            if (val === 'on') {
+                                val = YWatchdog.OUTPUT_ON;
+                            } else {
+                                val = YWatchdog.OUTPUT_OFF;
+                            }
+                        }
+                        node.ywatchdog.set_output(val);
+                        break;
+                    case 'pulse':
+                        node.ywatchdog.pulse(msg.payload);
+                        break;
+                    case 'set_running':
+                        if (typeof val === "string") {
+                            val = val.toLowerCase();
+                            if (val === 'on') {
+                                val = YWatchdog.RUNNING_ON;
+                            } else {
+                                val = YWatchdog.RUNNING_OFF;
+                            }
+                        }
+                        node.ywatchdog.set_output(val);
+                        break;
+                    case 'resetWatchdog':
+                        node.ywatchdog.resetWatchdog();
+                        break;
+                    default:
+                        node.warn('unknown command : ' + node.command);
+                }
+            });
+        };
+    }
+    RED.nodes.registerType('YWatchdog', UseYWatchdog);
 
 };

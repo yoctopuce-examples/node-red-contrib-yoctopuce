@@ -508,16 +508,18 @@
         category: 'Yoctopuce',
         color: '#C0C0C0',
         defaults: {
-            yoctohub: {value: "", type: "yoctohub"},
-            name: {value: ""},
+            yoctohub: {value: '', type: "yoctohub"},
+            name: {value: ''},
+            command: {value: 'set_state'},
+            msdelay: {value: 0, validate: RED.validators.number()},
             hwid: {
-                value: "", required: true, validate: function (v) {
+                value: '', required: true, validate: function (v) {
                     return v.length > 0;
                 }
             }
         },
         inputs: 1,
-        outputs: 1,
+        outputs: 0,
         icon: "yoctopuce.png",
         paletteLabel: "YRelay",
         label: function () {
@@ -534,6 +536,14 @@
     <div class="form-row">
         <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
+    </div>
+    <div class="form-row">
+        <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
+        <select id="node-input-command" placeholder="Command">
+            <option value="set_state">State (A /B)</option>
+            <option value="set_output">Output (On / Off)</option>
+            <option value="pulse">Pulse to state B</option>
+        </select>
     </div>
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>

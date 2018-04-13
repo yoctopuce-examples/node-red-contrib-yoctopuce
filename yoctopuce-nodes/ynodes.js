@@ -1,11 +1,13 @@
 // noinspection JSUnresolvedVariable
 module.exports = function (RED) {
     "use strict";
+    // noinspection JSUnresolvedFunction
     require('yoctolib-es2017/yocto_api.js');
 
 
     function UseYFunction(config)
     {
+        // noinspection JSUnresolvedVariable
         RED.nodes.createNode(this, config);
         var node = this;
         this.hwid = config.hwid;
@@ -51,6 +53,7 @@ module.exports = function (RED) {
 
 
             this.yoctohub.register(this);
+            // noinspection JSUnresolvedFunction
             this.on('close', function (done) {
                 node.yoctohub.deregister(node, done);
             });
@@ -62,21 +65,19 @@ module.exports = function (RED) {
     function UseYSensor(config)
     {
         UseYFunction.call(this, config);
-        this.sensor = null;
         this.useTimeNot = config.useTimeNot;
         var node = this;
 
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             let sensor;
             if (node.hwid) {
                 sensor = YSensor.FindSensorInContext(node.yctx, node.hwid);
             } else {
                 sensor = YSensor.FirstSensorInContext(node.yctx);
             }
-            node.sensor = sensor;
             if (node.useTimeNot) {
                 node.setupFunNodeSate(sensor, false);
-                sensor.registerTimedReportCallback(function (func, ymeasure) {
+                await sensor.registerTimedReportCallback(function (func, ymeasure) {
                     let avg = ymeasure.get_averageValue();
                     let msg = {payload: avg, topic: node.name};
                     node.send(msg);
@@ -90,8 +91,6 @@ module.exports = function (RED) {
 
     RED.nodes.registerType("yoctopuce-function", UseYFunction);
     RED.nodes.registerType("yoctopuce-sensor", UseYSensor);
-
-
 
 
     require('yoctolib-es2017/yocto_buzzer.js');
@@ -353,7 +352,7 @@ module.exports = function (RED) {
                         await node.layer2.selectColorPen(0);
                         await node.layer2.drawBar(0, 0, node.w - 1, node.h - 1);
                         await node.layer2.selectColorPen(0xffffff);
-                        await node.layer2.drawText(node.w / 2, node.h / 2, node.layer2.ALIGN_CENTER, msg.payload);
+                        await node.layer2.drawText(node.w / 2, node.h / 2, YDisplayLayer.ALIGN_CENTER, msg.payload);
                         await node.ydisplay.swapLayerContent(2, 3);
                         break;
                     case 'playSequence':
@@ -435,6 +434,7 @@ module.exports = function (RED) {
     RED.nodes.registerType('yoctopuce-led', UseYLed);
 
     require('yoctolib-es2017/yocto_pwmoutput.js');
+
     function UseYPwmOutput(config)
     {
         UseYFunction.call(this, config);
@@ -465,12 +465,16 @@ module.exports = function (RED) {
             });
         };
     }
+
     RED.nodes.registerType('yoctopuce-pwmoutput', UseYPwmOutput);
     require('yoctolib-es2017/yocto_relay.js');
+
     function UseYRelay(config)
     {
         UseYFunction.call(this, config);
         this.yrelay = null;
+        this.command = config.command;
+        this.msdelay = config.msdelay;
         var node = this;
 
         this.onYoctHubReady = function () {
@@ -484,18 +488,32 @@ module.exports = function (RED) {
             node.setupFunNodeSate(relay, false);
             node.yrelay = relay;
             node.on('input', function (msg) {
-                switch (msg.payload.toUpperCase()) {
-                    case 'A':
-                        node.yrelay.set_state(YRelay.STATE_A);
+                let val = msg.payload;
+                switch (node.command) {
+                    case 'set_state':
+                        if (typeof val === "string") {
+                            val = val.toLowerCase();
+                            if (val === 'b') {
+                                val = YRelay.STATE_B;
+                            } else {
+                                val = YRelay.STATE_A;
+                            }
+                        }
+                        node.yrelay.set_state(val);
                         break;
-                    case 'B':
-                        node.yrelay.set_state(YRelay.STATE_B);
+                    case 'set_output':
+                        if (typeof val === "string") {
+                            val = val.toLowerCase();
+                            if (val === 'on') {
+                                val = YRelay.OUTPUT_ON;
+                            } else {
+                                val = YRelay.OUTPUT_OFF;
+                            }
+                        }
+                        node.yrelay.set_output(val);
                         break;
-                    case 'ON':
-                        node.yrelay.set_output(YRelay.OUTPUT_ON);
-                        break;
-                    case 'OFF':
-                        node.yrelay.set_output(YRelay.OUTPUT_OFF);
+                    case 'pulse':
+                        node.yrelay.pulse(msg.payload);
                         break;
                     default:
                         node.warn('unknown command : ' + node.command);
@@ -506,6 +524,48 @@ module.exports = function (RED) {
         };
 
     }
+
     RED.nodes.registerType('yoctopuce-relay', UseYRelay);
-//--- (end of YRelay implementation)
-}
+
+
+    require('yoctolib-es2017/yocto_serialport.js');
+    function UseYSerialPort(config) {
+        UseYFunction.call(this, config);
+        this.yserialport = null;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let serialport;
+            if (node.hwid) {
+                serialport = YSerialPort.FindSerialPortInContext(node.yctx, node.hwid);
+            } else {
+                serialport = YSerialPort.FirstSerialPortInContext(node.yctx);
+            }
+            node.setupFunNodeSate(lower_classname, false);
+            node.yserialport = serialport;
+            node.on('input', function (msg) {
+                switch (node.command) {
+                    case 'set_currentJob':
+                        node.yserialport.set_currentJob(msg.payload);
+                        break;
+                    case 'set_startupJob':
+                        node.yserialport.set_startupJob(msg.payload);
+                        break;
+                    case 'set_voltageLevel':
+                        node.yserialport.set_voltageLevel(msg.payload);
+                        break;
+                    case 'set_protocol':
+                        node.yserialport.set_protocol(msg.payload);
+                        break;
+                    case 'set_serialMode':
+                        node.yserialport.set_serialMode(msg.payload);
+                        break;
+                    default:
+                        node.warn('unknown command : ' + msg.payload);
+                }
+            });
+        };
+    }
+    RED.nodes.registerType('yoctopuce-serialport', UseYSerialPort);
+
+};

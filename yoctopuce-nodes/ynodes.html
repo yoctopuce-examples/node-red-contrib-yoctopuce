@@ -654,6 +654,59 @@
 
 
 <script type="text/javascript">
+    RED.nodes.registerType('yoctopuce-spiport', {
+        category: 'Yoctopuce',
+        color: '#C0C0C0',
+        defaults: {
+            yoctohub: {value: '', type: "yoctohub"},
+            name: {value: ''},
+            command: {value: 'writeHex'},
+            hwid: {
+                value: '', required: true, validate: function (v) {
+                    return v.length > 0;
+                }
+            }
+        },
+        inputs: 1,
+        outputs: 0,
+        icon: "yoctopuce.png",
+        paletteLabel: "YSpiPort",
+        label: function () {
+            return this.name || "YSpiPort";
+        }
+    });
+</script>
+<script type="text/x-red" data-template-name="yoctopuce-spiport">
+    <div class="form-row">
+        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
+    </div>
+    <div class="form-row">
+        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <input type="text" id="node-input-hwid" placeholder="HardwareID">
+    </div>
+    <div class="form-row">
+        <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
+        <select id="node-input-command" placeholder="Command">
+            <option value="reset">Reset</option>
+            <option value="writeByte">Write Byte</option>
+            <option value="writeStr">Write Str</option>
+            <option value="writeBin">Write Bin</option>
+            <option value="writeHex">Write Hex</option>
+            <option value="writeLine">Write Line</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-help-name="yoctopuce-spiport">
+    <p>A Node-RED node to control YSpiPort functions.</p>
+</script>
+
+
+<script type="text/javascript">
     RED.nodes.registerType('YVoltageOutput', {
         category: 'Yoctopuce',
         color: '#C0C0C0',

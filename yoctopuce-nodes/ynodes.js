@@ -601,6 +601,54 @@ module.exports = function (RED) {
     }
     RED.nodes.registerType('YServo', UseYServo);
 
+   require('yoctolib-es2017/yocto_spiport.js');
+    function UseYSpiPort(config)
+    {
+        UseYFunction.call(this, config);
+        this.yspiport = null;
+        this.command = config.command;
+        var node = this;
+        this.onYoctHubReady = function () {
+            // by default use any connected module suitable for the demo
+            let spiport;
+            if (node.hwid) {
+                spiport = YSpiPort.FindSpiPortInContext(node.yctx, node.hwid);
+            } else {
+                spiport = YSpiPort.FirstSpiPortInContext(node.yctx);
+            }
+            node.setupFunNodeSate(spiport, false);
+            node.yspiport = spiport;
+            node.on('input', function (msg) {
+                switch (node.command) {
+                    case 'reset':
+                        node.yspiport.reset();
+                        break;
+                    case 'writeByte':
+                        node.yspiport.writeByte(msg.payload);
+                        break;
+                    case 'writeStr':
+                        node.yspiport.writeStr(msg.payload);
+                        break;
+                    case 'writeBin':
+                        node.yspiport.writeBin(msg.payload);
+                        break;
+                    case 'writeArray':
+                        node.yspiport.writeArray(msg.payload);
+                        break;
+                    case 'writeHex':
+                        node.yspiport.writeHex(msg.payload);
+                        break;
+                    case 'writeLine':
+                        node.yspiport.writeLine(msg.payload);
+                        break;
+                    default:
+                        node.warn('unknown command : ' + node.command);
+                }
+            });
+        };
+    }
+    RED.nodes.registerType('yoctopuce-spiport', UseYSpiPort);
+
     require('yoctolib-es2017/yocto_voltageoutput.js');
     function UseYVoltageOutput(config)
     {

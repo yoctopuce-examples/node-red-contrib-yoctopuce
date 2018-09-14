@@ -352,7 +352,7 @@ module.exports = function (RED) {
                         await node.layer2.selectColorPen(0);
                         await node.layer2.drawBar(0, 0, node.w - 1, node.h - 1);
                         await node.layer2.selectColorPen(0xffffff);
-                        await node.layer2.drawText(node.w / 2, node.h / 2, YDisplayLayer.ALIGN_CENTER, msg.payload);
+                        await node.layer2.drawText(node.w / 2, node.h / 2, node.layer2.ALIGN_CENTER, msg.payload);
                         await node.ydisplay.swapLayerContent(2, 3);
                         break;
                     case 'playSequence':

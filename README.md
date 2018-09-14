@@ -27,6 +27,7 @@ All node has at least three parameters :
     * ModuleLogicalName.FunctionLogicalName
 * **Name** (optional): the name of this Node-RED node.
 
+
 The **YoctoHub** configuration has 4 parameters:
 
 * **YoctoHub Hostname**: the hostname or the IP address of the VirtualHub or YoctoHub where the YSensor is connected.

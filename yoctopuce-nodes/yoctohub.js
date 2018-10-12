@@ -30,7 +30,6 @@ module.exports = function (RED) {
             node.log("register node id " + clientNode.id + " (" + clientNode.hwid + ")");
             node.users[clientNode.id] = clientNode;
             let length = Object.keys(node.users).length;
-            node.log("count =" + length);
             if (length === 1) {
                 node.connect();
             }
@@ -55,6 +54,8 @@ module.exports = function (RED) {
 
 
         this.connect = function () {
+            let version = YAPI.imm_GetAPIVersion();
+            node.log("Use YoctoLib " + version);
             node.log("connect to " + node.hostname);
             let errmsg = new YErrorMsg();
             node.yctx.LogUnhandledPromiseRejections().then(() => {
@@ -69,9 +70,9 @@ module.exports = function (RED) {
                     return;
                 }
                 node.log("YoctoHub " + node.hostname + " up and running");
-                for (var id in node.users) {
-                    node.log("update node id " + id + " (" + node.users[id].hwid + ")");
+                for (let id in node.users) {
                     if (node.users.hasOwnProperty(id)) {
+                        node.log("update node id " + id + " (" + node.users[id].hwid + ")");
                         node.users[id].onYoctHubReady();
                     }
                 }

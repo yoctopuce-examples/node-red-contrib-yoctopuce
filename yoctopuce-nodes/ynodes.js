@@ -19,6 +19,7 @@ module.exports = function (RED) {
             this.status({fill: "red", shape: "ring", text: "node-red:common.status.disconnected"});
             this.onYoctHubReady = function () {
                 // by default use any connected module suitable for the demo
+                node.log("function ready...");
                 let yfun;
                 if (node.hwid) {
                     yfun = YFunction.FindFunctionInContext(node.yctx, node.hwid);
@@ -30,28 +31,28 @@ module.exports = function (RED) {
             };
             this.setupFunNodeSate = function (yfun, registerCb) {
                 if (!yfun) {
-                    node.warn("No function connected on " + node.yoctohub);
+                    node.warn("No function connected on " + node.yoctohub.hostname);
                     return;
                 }
                 node.status({fill: "yellow", shape: "dot", text: "running"});
                 node.log("use  " + node.hwid + " on " + node.yoctohub.hostname);
                 node.yfun = yfun;
-                if (registerCb) {
-                    node.yfun.registerValueCallback(function (obj_fct, str_value) {
-                        let msg = {payload: str_value, topic: node.name};
-                        node.send(msg);
-                    });
-                }
                 node.yfun.isOnline().then((isonline) => {
                     if (!isonline) {
-                        node.warn("No function " + node.hwid + " connected on " + node.yoctohub);
+                        node.warn("No function " + node.hwid + " connected on " + node.yoctohub.hostname);
                         return;
+                    }
+                    if (registerCb) {
+                        node.yfun.registerValueCallback(function (obj_fct, str_value) {
+                            let msg = {payload: str_value, topic: node.name};
+                            node.send(msg);
+                        });
                     }
                     node.status({fill: "green", shape: "dot", text: "running"});
                 });
+
+
             };
-
-
             this.yoctohub.register(this);
             // noinspection JSUnresolvedFunction
             this.on('close', function (done) {
@@ -70,6 +71,8 @@ module.exports = function (RED) {
 
         this.onYoctHubReady = async function () {
             let sensor;
+            node.log("sensor ready...");
+
             if (node.hwid) {
                 sensor = YSensor.FindSensorInContext(node.yctx, node.hwid);
             } else {
@@ -527,6 +530,7 @@ module.exports = function (RED) {
     RED.nodes.registerType('YRelay', UseYRelay);
 
     require('yoctolib-es2017/yocto_serialport.js');
+
     function UseYSerialPort(config)
     {
         UseYFunction.call(this, config);
@@ -569,10 +573,12 @@ module.exports = function (RED) {
             });
         };
     }
+
     RED.nodes.registerType('YSerialPort', UseYSerialPort);
 
 
     require('yoctolib-es2017/yocto_servo.js');
+
     function UseYServo(config)
     {
         UseYFunction.call(this, config);
@@ -593,15 +599,17 @@ module.exports = function (RED) {
             node.on('input', function (msg) {
                 if (node.msdelay > 0) {
                     node.yservo.move(msg.payload, node.msdelay);
-                }else {
+                } else {
                     node.yservo.set_position(msg.payload);
                 }
             });
         };
     }
+
     RED.nodes.registerType('YServo', UseYServo);
 
-   require('yoctolib-es2017/yocto_spiport.js');
+    require('yoctolib-es2017/yocto_spiport.js');
+
     function UseYSpiPort(config)
     {
         UseYFunction.call(this, config);
@@ -647,9 +655,11 @@ module.exports = function (RED) {
             });
         };
     }
+
     RED.nodes.registerType('yoctopuce-spiport', UseYSpiPort);
 
     require('yoctolib-es2017/yocto_voltageoutput.js');
+
     function UseYVoltageOutput(config)
     {
         UseYFunction.call(this, config);
@@ -669,15 +679,17 @@ module.exports = function (RED) {
             node.on('input', function (msg) {
                 if (node.msdelay > 0) {
                     node.yvoltageoutput.voltageMove(msg.payload, node.msdelay)
-                }else {
+                } else {
                     node.yvoltageoutput.set_currentVoltage(msg.payload);
                 }
             });
         };
     }
+
     RED.nodes.registerType('YVoltageOutput', UseYVoltageOutput);
 
     require('yoctolib-es2017/yocto_watchdog.js');
+
     function UseYWatchdog(config)
     {
         UseYFunction.call(this, config);
@@ -742,6 +754,7 @@ module.exports = function (RED) {
             });
         };
     }
+
     RED.nodes.registerType('YWatchdog', UseYWatchdog);
 
 };

@@ -1,0 +1,136 @@
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('YSQLHelper', {
+        category: 'Yoctopuce',
+        color: '#E2D96E',
+        defaults: {
+            tablename: {
+                value: "yoctopuce_sensors", required: true, validate: function (v) {
+                    return v.length > 0;
+                }
+            },
+            operation: {value: "insert"},
+            filter_hwid: {value: ""},
+            filter_op: {value: "all"},
+            filter_size: {value: "100", validate: RED.validators.number()},
+            output: {value: "topic", required: true},
+            name: {value: ""},
+
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "yoctopuce.png",
+        paletteLabel: "SQLHelper",
+        oneditprepare: function () {
+            $("#node-input-operation").change(function () {
+                let val = $(this).val();
+                if (val === 'select') {
+                    $("#filter_hwid-show").show();
+                    $("#filter-show").show();
+                } else {
+                    $("#filter_hwid-show").hide();
+                    $("#filter-show").hide();
+                }
+            });
+            $("#node-input-select_op").change(function () {
+                let val = $(this).val();
+                if (val === 'all') {
+                    $("#node-input-filter_size").prop('disabled', true);
+                } else {
+                    $("#node-input-filter_size").prop('disabled', false);
+                }
+            });
+        },
+        label: function () {
+            if (this.name)
+                return this.name;
+            return "SQL " + this.operation;
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
+        }
+    });
+</script>
+<script type="text/x-red" data-template-name="YSQLHelper">
+    <div class="form-row">
+        <label for="node-input-tablename"><i class="fa fa-table" aria-hidden="true"></i> Table Name</label>
+        <input type="text" id="node-input-tablename" placeholder="Table Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-operation"><i class="fa fa-bars" aria-hidden="true"></i> Operation</label>
+        <select id="node-input-operation" placeholder="Command">
+            <option value="insert">Insert</option>
+            <option value="select">Select</option>
+            <option value="create">Create Table</option>
+            <option value="drop">Clear table</option>
+        </select>
+    </div>
+
+     <div class="form-row" id="filter_hwid-show">
+        <label for="node-input-filter_hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
+        <input type="text" id="node-input-filter_hwid" style="width:50%;">
+    </div>
+     <div class="form-row" id="filter-show">
+        <label for="node-input-filter_op"><i class="fa fa-filter" aria-hidden="true"></i> Filter</label>
+        <select id="node-input-filter_op" style="width:100px;">
+            <option value="all">all</option>
+            <option value="last">last</option>
+            <option value="first">first</option>
+        </select>
+        <input type="text" id="node-input-filter_size" style="width:50px;">
+        <label for="node-input-filter_size" style="width:auto; margin-left:10px; margin-right:10px;">records</label>
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-output"><i class="fa fa-envelope" aria-hidden="true"></i> Send to </label>
+        <select id="node-input-output" placeholder="Command">
+            <option value="topic">msg.topic</option>
+            <option value="payload">msg.payload</option>
+        </select>
+    </div>
+
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="YFunction">
+    <p>A Node-RED node to build valid SQL querry.</p>
+</script>
+
+
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('DbSerialize', {
+        category: 'Yoctopuce',
+        color: '#E2D96E',
+        defaults: {
+            name: {value: ""},
+
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "yoctopuce.png",
+        paletteLabel: "DbSerialize",
+        label: function () {
+            return this.name || "DbSerialize";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
+        }
+    });
+</script>
+
+<script type="text/x-red" data-template-name="DbSerialize">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+
+<script type="text/x-red" data-help-name="DbSerialize">
+    <p>A Node-RED node to build valid SQL querry.</p>
+</script>

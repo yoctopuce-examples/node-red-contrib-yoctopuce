@@ -29,7 +29,19 @@ module.exports = function (RED) {
                 node.setupFunNodeSate(yfun, true);
 
             };
-            this.setupFunNodeSate = function (yfun, registerCb) {
+
+            node.updateDevList = function (serial, plug) {
+                // by default use any connected module suitable for the demo
+                if (node.serialNumber === serial) {
+                    if (plug) {
+                        node.status({fill: "green", shape: "dot", text: "running"});
+                    } else {
+                        node.status({fill: "yellow", shape: "dot", text: "running"});
+                    }
+                }
+
+            };
+            this.setupFunNodeSate = async function (yfun, registerCb) {
                 if (!yfun) {
                     node.warn("No function connected on " + node.yoctohub.hostname);
                     return;
@@ -37,21 +49,22 @@ module.exports = function (RED) {
                 node.status({fill: "yellow", shape: "dot", text: "running"});
                 node.log("use  " + node.hwid + " on " + node.yoctohub.hostname);
                 node.yfun = yfun;
-                node.yfun.isOnline().then((isonline) => {
+                node.yfun.isOnline().then(async (isonline) => {
                     if (!isonline) {
                         node.warn("No function " + node.hwid + " connected on " + node.yoctohub.hostname);
                         return;
                     }
                     if (registerCb) {
                         node.yfun.registerValueCallback(function (obj_fct, str_value) {
-                            let msg = {payload: str_value, topic: node.name};
+                            let topic = getUsefullTopic(node);
+                            let msg = {payload: str_value, topic: topic};
                             node.send(msg);
                         });
                     }
+                    let module = await node.yfun.get_module();
+                    node.serialNumber = await module.get_serialNumber();
                     node.status({fill: "green", shape: "dot", text: "running"});
                 });
-
-
             };
             this.yoctohub.register(this);
             // noinspection JSUnresolvedFunction
@@ -63,16 +76,35 @@ module.exports = function (RED) {
         }
     }
 
+    let getUsefullTopic = function (node) {
+        let topic;
+        if (node.name) {
+            topic = node.name;
+        } else {
+            topic = node.hwid;
+        }
+        return topic;
+    };
+
     function UseYSensor(config)
     {
         UseYFunction.call(this, config);
         this.useTimeNot = config.useTimeNot;
+        this.reportFrequency = config.reportFrequency;
+        if (typeof this.reportFrequency === 'undefined') {
+            this.reportFrequency = '30/s';
+        }
+        this.report_type = config.report_type;
+        if (typeof this.report_type === 'undefined') {
+            this.report_type = 'avg';
+        }
         var node = this;
 
         this.onYoctHubReady = async function () {
             let sensor;
             node.log("sensor ready...");
-
+            //node.timeoffset = new Date().getTimezoneOffset();
+            //node.log(node.timeoffset);
             if (node.hwid) {
                 sensor = YSensor.FindSensorInContext(node.yctx, node.hwid);
             } else {
@@ -80,9 +112,31 @@ module.exports = function (RED) {
             }
             if (node.useTimeNot) {
                 node.setupFunNodeSate(sensor, false);
+                await sensor.set_reportFrequency(node.reportFrequency);
                 await sensor.registerTimedReportCallback(function (func, ymeasure) {
+                    let payload;
+
                     let avg = ymeasure.get_averageValue();
-                    let msg = {payload: avg, topic: node.name};
+                    let min = ymeasure.get_minValue();
+                    let max = ymeasure.get_maxValue();
+                    let start = ymeasure.get_startTimeUTC() * 1000;
+                    let stop = ymeasure.get_endTimeUTC() * 1000;
+                    switch (node.report_type) {
+                        case 'avg':
+                            payload = avg;
+                            break;
+                        case 'min':
+                            payload = min;
+                            break;
+                        case 'max':
+                            payload = max;
+                            break;
+                        case 'all':
+                            payload = {start: start, stop: stop, min: min, max: max, avg: avg};
+                            break;
+                    }
+                    let topic = getUsefullTopic(node);
+                    let msg = {payload: payload, topic: topic, timestamp: stop};
                     node.send(msg);
                 })
             } else {
@@ -96,6 +150,7 @@ module.exports = function (RED) {
     RED.nodes.registerType("YSensor", UseYSensor);
 
 
+//--- (generated code: YBuzzer class start)
     require('yoctolib-es2017/yocto_buzzer.js');
 
     function UseYBuzzer(config)
@@ -103,8 +158,11 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.ybuzzer = null;
         this.command = config.command;
+//--- (end of generated code: YBuzzer class start)
+
+//--- (generated code: YBuzzer implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let buzzer;
             if (node.hwid) {
@@ -114,7 +172,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(buzzer, false);
             node.ybuzzer = buzzer;
-            node.on('input', function (msg) {
+//--- (end of generated code: YBuzzer implementation)
+            node.on('input', async function (msg) {
                 switch (node.command) {
                     case 'set_frequency':
                         node.ybuzzer.set_frequency(msg.payload);
@@ -129,11 +188,15 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + node.command);
                 }
             });
+//--- (generated code: YBuzzer cleanup)
         };
     }
 
     RED.nodes.registerType('YBuzzer', UseYBuzzer);
+//--- (end of generated code: YBuzzer cleanup)
 
+
+//--- (generated code: YColorLed class start)
     require('yoctolib-es2017/yocto_colorled.js');
 
     function UseYColorLed(config)
@@ -141,9 +204,11 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.ycolorled = null;
         this.command = config.command;
+//--- (end of generated code: YColorLed class start)
         this.msdelay = config.msdelay;
+//--- (generated code: YColorLed implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let colorled;
             if (node.hwid) {
@@ -153,7 +218,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(colorled, false);
             node.ycolorled = colorled;
-            node.on('input', function (msg) {
+//--- (end of generated code: YColorLed implementation)
+            node.on('input', async function (msg) {
                 let data = msg.payload;
                 let color = data;
                 if (typeof data === "string") {
@@ -186,11 +252,15 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + node.command);
                 }
             });
+//--- (generated code: YColorLed cleanup)
         };
     }
 
     RED.nodes.registerType('YColorLed', UseYColorLed);
+//--- (end of generated code: YColorLed cleanup)
 
+
+//--- (generated code: YColorLedCluster class start)
     require('yoctolib-es2017/yocto_colorledcluster.js');
 
     function UseYColorLedCluster(config)
@@ -198,8 +268,11 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.ycolorledcluster = null;
         this.command = config.command;
+//--- (end of generated code: YColorLedCluster class start)
+
+//--- (generated code: YColorLedCluster implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let colorledcluster;
             if (node.hwid) {
@@ -209,6 +282,7 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(colorledcluster, false);
             node.ycolorledcluster = colorledcluster;
+//--- (end of generated code: YColorLedCluster implementation)
             node.on('input', async function (msg) {
                 if (node.command === 'startBlinkSeq') {
                     node.ycolorledcluster.startBlinkSeq(msg.payload);
@@ -241,11 +315,14 @@ module.exports = function (RED) {
                     }
                 }
             });
+//--- (generated code: YColorLedCluster cleanup)
         };
     }
 
     RED.nodes.registerType('YColorLedCluster', UseYColorLedCluster);
+//--- (end of generated code: YColorLedCluster cleanup)
 
+//--- (generated code: YCurrentLoopOutput class start)
     require('yoctolib-es2017/yocto_currentloopoutput.js');
 
     function UseYCurrentLoopOutput(config)
@@ -253,8 +330,10 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.ycurrentloopoutput = null;
         this.command = config.command;
+//--- (end of generated code: YCurrentLoopOutput class start)
+//--- (generated code: YCurrentLoopOutput implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let currentloopoutput;
             if (node.hwid) {
@@ -264,7 +343,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(currentloopoutput, false);
             node.ycurrentloopoutput = currentloopoutput;
-            node.on('input', function (msg) {
+//--- (end of generated code: YCurrentLoopOutput implementation)
+            node.on('input', async function (msg) {
                 switch (node.command) {
                     case 'set_current':
                         node.ycurrentloopoutput.set_current(msg.payload);
@@ -274,12 +354,15 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + msg.payload);
                 }
             });
+//--- (generated code: YCurrentLoopOutput cleanup)
         };
     }
 
     RED.nodes.registerType('YCurrentLoopOutput', UseYCurrentLoopOutput);
+//--- (end of generated code: YCurrentLoopOutput cleanup)
 
 
+//--- (generated code: YDigitalIO class start)
     require('yoctolib-es2017/yocto_digitalio.js');
 
     function UseYDigitalIO(config)
@@ -287,8 +370,11 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.ydigitalio = null;
         this.command = config.command;
+//--- (end of generated code: YDigitalIO class start)
+
+//--- (generated code: YDigitalIO implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let digitalio;
             if (node.hwid) {
@@ -298,7 +384,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(digitalio, false);
             node.ydigitalio = digitalio;
-            node.on('input', function (msg) {
+//--- (end of generated code: YDigitalIO implementation)
+            node.on('input', async function (msg) {
                 switch (node.command) {
                     case 'set_portState':
                         node.ydigitalio.set_portState(msg.payload);
@@ -307,11 +394,15 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + msg.payload);
                 }
             });
+//--- (generated code: YDigitalIO cleanup)
         };
     }
 
     RED.nodes.registerType('YDigitalIO', UseYDigitalIO);
+//--- (end of generated code: YDigitalIO cleanup)
 
+
+//--- (generated code: YDisplay class start)
     require('yoctolib-es2017/yocto_display.js');
 
     function UseYDisplay(config)
@@ -319,10 +410,12 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.ydisplay = null;
         this.command = config.command;
+//--- (end of generated code: YDisplay class start)
         this.font = config.font;
         this.w = 0;
         this.h = 0;
         this.layer2 = null;
+//--- (generated code: YDisplay implementation)
         var node = this;
         this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
@@ -334,6 +427,7 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(display, false);
             node.ydisplay = display;
+//--- (end of generated code: YDisplay implementation)
             //clean up
             await node.ydisplay.resetAll();
 
@@ -347,7 +441,6 @@ module.exports = function (RED) {
             await layer3.clear();
             await layer3.selectFont(node.font);
             await node.layer2.selectFont(node.font);
-
             node.on('input', async function (msg) {
                 switch (node.command) {
                     case 'display':
@@ -365,11 +458,15 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + msg.payload);
                 }
             });
+//--- (generated code: YDisplay cleanup)
         };
     }
 
     RED.nodes.registerType('YDisplay', UseYDisplay);
+//--- (end of generated code: YDisplay cleanup)
 
+
+//--- (generated code: YLed class start)
     require('yoctolib-es2017/yocto_led.js');
 
     function UseYLed(config)
@@ -377,8 +474,10 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.yled = null;
         this.command = config.command;
+//--- (end of generated code: YLed class start)
+//--- (generated code: YLed implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let led;
             if (node.hwid) {
@@ -388,7 +487,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(led, false);
             node.yled = led;
-            node.on('input', function (msg) {
+//--- (end of generated code: YLed implementation)
+            node.on('input', async function (msg) {
                 switch (node.command) {
                     case 'set_luminosity':
                         node.yled.set_luminosity(msg.payload);
@@ -431,11 +531,14 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + node.command);
                 }
             });
+//--- (generated code: YLed cleanup)
         };
     }
 
     RED.nodes.registerType('YLed', UseYLed);
+//--- (end of generated code: YLed cleanup)
 
+//--- (generated code: YPwmOutput class start)
     require('yoctolib-es2017/yocto_pwmoutput.js');
 
     function UseYPwmOutput(config)
@@ -443,8 +546,10 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.ypwmoutput = null;
         this.command = config.command;
+//--- (end of generated code: YPwmOutput class start)
+//--- (generated code: YPwmOutput implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let pwmoutput;
             if (node.hwid) {
@@ -454,7 +559,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(pwmoutput, false);
             node.ypwmoutput = pwmoutput;
-            node.on('input', function (msg) {
+//--- (end of generated code: YPwmOutput implementation)
+            node.on('input', async function (msg) {
                 switch (node.command) {
                     case 'set_frequency':
                         node.ypwmoutput.set_frequency(msg.payload);
@@ -466,10 +572,14 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + node.command);
                 }
             });
+//--- (generated code: YPwmOutput cleanup)
         };
     }
 
     RED.nodes.registerType('YPwmOutput', UseYPwmOutput);
+//--- (end of generated code: YPwmOutput cleanup)
+
+//--- (generated code: YRelay class start)
     require('yoctolib-es2017/yocto_relay.js');
 
     function UseYRelay(config)
@@ -477,9 +587,10 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.yrelay = null;
         this.command = config.command;
+//--- (end of generated code: YRelay class start)
+//--- (generated code: YRelay implementation)
         var node = this;
-
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let relay;
             if (node.hwid) {
@@ -489,7 +600,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(relay, false);
             node.yrelay = relay;
-            node.on('input', function (msg) {
+//--- (end of generated code: YRelay implementation)
+            node.on('input', async function (msg) {
                 let val = msg.payload;
                 switch (node.command) {
                     case 'set_state':
@@ -520,15 +632,16 @@ module.exports = function (RED) {
                     default:
                         node.warn('unknown command : ' + node.command);
                 }
-
             });
-
+//--- (generated code: YRelay cleanup)
         };
-
     }
 
     RED.nodes.registerType('YRelay', UseYRelay);
+//--- (end of generated code: YRelay cleanup)
 
+
+//--- (generated code: YSerialPort class start)
     require('yoctolib-es2017/yocto_serialport.js');
 
     function UseYSerialPort(config)
@@ -536,8 +649,11 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.yserialport = null;
         this.command = config.command;
+//--- (end of generated code: YSerialPort class start)
+
+//--- (generated code: YSerialPort implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let serialport;
             if (node.hwid) {
@@ -547,7 +663,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(serialport, false);
             node.yserialport = serialport;
-            node.on('input', function (msg) {
+//--- (end of generated code: YSerialPort implementation)
+            node.on('input', async function (msg) {
                 switch (node.command) {
                     case 'writeByte':
                         node.yserialport.writeByte(msg.payload);
@@ -571,22 +688,28 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + node.command);
                 }
             });
+//--- (generated code: YSerialPort cleanup)
         };
     }
 
     RED.nodes.registerType('YSerialPort', UseYSerialPort);
+//--- (end of generated code: YSerialPort cleanup)
 
 
+//--- (generated code: YServo class start)
     require('yoctolib-es2017/yocto_servo.js');
 
     function UseYServo(config)
     {
         UseYFunction.call(this, config);
         this.yservo = null;
+        this.command = config.command;
+//--- (end of generated code: YServo class start)
         this.msdelay = config.msdelay;
 
+//--- (generated code: YServo implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let servo;
             if (node.hwid) {
@@ -596,18 +719,23 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(servo, false);
             node.yservo = servo;
-            node.on('input', function (msg) {
+//--- (end of generated code: YServo implementation)
+            node.on('input', async function (msg) {
                 if (node.msdelay > 0) {
                     node.yservo.move(msg.payload, node.msdelay);
                 } else {
                     node.yservo.set_position(msg.payload);
                 }
             });
+//--- (generated code: YServo cleanup)
         };
     }
 
     RED.nodes.registerType('YServo', UseYServo);
+//--- (end of generated code: YServo cleanup)
 
+
+//--- (generated code: YSpiPort class start)
     require('yoctolib-es2017/yocto_spiport.js');
 
     function UseYSpiPort(config)
@@ -615,8 +743,11 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.yspiport = null;
         this.command = config.command;
+//--- (end of generated code: YSpiPort class start)
+
+//--- (generated code: YSpiPort implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let spiport;
             if (node.hwid) {
@@ -626,7 +757,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(spiport, false);
             node.yspiport = spiport;
-            node.on('input', function (msg) {
+//--- (end of generated code: YSpiPort implementation)
+            node.on('input', async function (msg) {
                 switch (node.command) {
                     case 'reset':
                         node.yspiport.reset();
@@ -653,20 +785,28 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + node.command);
                 }
             });
+//--- (generated code: YSpiPort cleanup)
         };
     }
 
-    RED.nodes.registerType('yoctopuce-spiport', UseYSpiPort);
+    RED.nodes.registerType('YSpiPort', UseYSpiPort);
+//--- (end of generated code: YSpiPort cleanup)
 
+
+//--- (generated code: YVoltageOutput class start)
     require('yoctolib-es2017/yocto_voltageoutput.js');
 
     function UseYVoltageOutput(config)
     {
         UseYFunction.call(this, config);
         this.yvoltageoutput = null;
+        this.command = config.command;
+//--- (end of generated code: YVoltageOutput class start)
         this.msdelay = config.msdelay;
+
+//--- (generated code: YVoltageOutput implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let voltageoutput;
             if (node.hwid) {
@@ -676,18 +816,23 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(voltageoutput, false);
             node.yvoltageoutput = voltageoutput;
-            node.on('input', function (msg) {
+//--- (end of generated code: YVoltageOutput implementation)
+            node.on('input', async function (msg) {
                 if (node.msdelay > 0) {
                     node.yvoltageoutput.voltageMove(msg.payload, node.msdelay)
                 } else {
                     node.yvoltageoutput.set_currentVoltage(msg.payload);
                 }
             });
+//--- (generated code: YVoltageOutput cleanup)
         };
     }
 
     RED.nodes.registerType('YVoltageOutput', UseYVoltageOutput);
+//--- (end of generated code: YVoltageOutput cleanup)
 
+
+//--- (generated code: YWatchdog class start)
     require('yoctolib-es2017/yocto_watchdog.js');
 
     function UseYWatchdog(config)
@@ -695,8 +840,11 @@ module.exports = function (RED) {
         UseYFunction.call(this, config);
         this.ywatchdog = null;
         this.command = config.command;
+//--- (end of generated code: YWatchdog class start)
+
+//--- (generated code: YWatchdog implementation)
         var node = this;
-        this.onYoctHubReady = function () {
+        this.onYoctHubReady = async function () {
             // by default use any connected module suitable for the demo
             let watchdog;
             if (node.hwid) {
@@ -706,7 +854,8 @@ module.exports = function (RED) {
             }
             node.setupFunNodeSate(watchdog, false);
             node.ywatchdog = watchdog;
-            node.on('input', function (msg) {
+//--- (end of generated code: YWatchdog implementation)
+            node.on('input', async function (msg) {
                 let val = msg.payload;
                 switch (node.command) {
                     case 'set_state':
@@ -752,9 +901,12 @@ module.exports = function (RED) {
                         node.warn('unknown command : ' + node.command);
                 }
             });
+//--- (generated code: YWatchdog cleanup)
         };
     }
 
     RED.nodes.registerType('YWatchdog', UseYWatchdog);
+//--- (end of generated code: YWatchdog cleanup)
+
 
 };

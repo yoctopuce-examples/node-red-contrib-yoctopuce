@@ -1,3 +1,5 @@
+
+
 <script type="text/javascript">
     RED.nodes.registerType('YFunction', {
         category: 'Yoctopuce',
@@ -16,34 +18,40 @@
         icon: "yoctopuce.png",
         paletteLabel: "YFunction",
         label: function () {
-            return this.name || "YFunction";
+            return this.name || this.hwid || "YFunction";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
 
+
+<!--- (generated code: YFunction definitions) -->
 <script type="text/x-red" data-template-name="YFunction">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
-
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YFunction definitions) -->
+<!--- (generated code: YFunction attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
 </script>
-
 <script type="text/x-red" data-help-name="YFunction">
-    <p>A Node-RED node to get live value of a Yoctopuce Function.</p>
-
+    <p>A Node-RED node to control YFunction functions.</p>
 </script>
+<!--- (end of generated code: YFunction attributes) -->
 
-<script type="text/javascript">
+
+
+    <script type="text/javascript">
     RED.nodes.registerType('YSensor', {
         category: 'Yoctopuce',
         color: '#C0C0C0',
@@ -51,6 +59,8 @@
             yoctohub: {value: "", type: "yoctohub"},
             name: {value: ""},
             useTimeNot: {value: false},
+            reportFrequency: {value: '60/m'},
+            report_type: {value: 'avg'},
             hwid: {
                 value: "", required: true, validate: function (v) {
                     return v.length > 0;
@@ -62,38 +72,101 @@
         icon: "yoctopuce.png",
         paletteLabel: "YSensor",
         label: function () {
-            return this.name || "YSensor";
+            return this.name || this.hwid || this.name || this.hwid || "YSensor";
+
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
+        },
+        oneditprepare: function () {
+            $("#node-input-timed").change(function () {
+                let val = $(this).val();
+                if (val === 't') {
+                    $("#frequency-show").show();
+                    $("#data_type-show").show();
+                } else {
+                    $("#frequency-show").hide();
+                    $("#data_type-show").hide();
+                }
+            });
+            if (this.useTimeNot) {
+                $("#node-input-timed").val("t");
+                $("#frequency-show").show();
+                $("#data_type-show").show();
+            } else {
+                $("#node-input-timed").val("i");
+                $("#frequency-show").hide();
+                $("#data_type-show").hide();
+            }
+            let parts = this.reportFrequency.split('/');
+            $("#node-input-frequency").val(parts[0]);
+            $("#node-input-frequencyUnit").val(parts[1]);
+        },
+        oneditsave: function () {
+            this.useTimeNot = $("#node-input-timed").val() === 't';
+            let freq = $("node-input-frequency").val() + "/" + $("node-input-frequencyUnit").val();
+            this.frequency = freq;
         }
     });
 </script>
-
+<!--- (generated code: YSensor definitions) -->
 <script type="text/x-red" data-template-name="YSensor">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
-
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YSensor definitions) -->
+
     <div class="form-row">
-        <label for="node-input-useTimeNot"><i class="fa fa-tag"></i>Use Timed Notifications</label>
-        <input type="checkbox" id="node-input-useTimeNot" placeholder="TimedNotification">
+        <label for="node-input-timed"><i class="fa fa-toggle-on" aria-hidden="true"></i> Type</label>
+        <select id="node-input-timed" style="width:308px;">
+            <option value='i'>live value</option>
+            <option value='t'>periodic value</option>
+        </select>
     </div>
+
+     <div class="form-row" id="frequency-show">
+        <label for="node-input-frequency"><i class="fa fa-clock-o" aria-hidden="true"></i> Frequency</label>
+        <input type="text" id="node-input-frequency" style="width:50px;">
+        <label for="node-input-frequencyUnit" style="width:auto; margin-left:10px; margin-right:10px;">per</label>
+        <select id="node-input-frequencyUnit" style="width:100px;">
+            <option value="s">seconds</option>
+            <option value="m">minutes</option>
+            <option value="h">hours</option>
+        </select>
+    </div>
+     <div class="form-row" id="data_type-show">
+        <label for="node-input-report_type"><i class="fa fa-database" aria-hidden="true"></i> Value</label>
+        <select id="node-input-report_type" style="width:308px;">
+            <option value="avg">Average</option>
+            <option value="min">Minimum</option>
+            <option value="max">Maximum</option>
+            <option value="all">All</option>
+        </select>
+    </div>
+    <hr/>
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i>Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
 </script>
 
 <script type="text/x-red" data-help-name="YSensor">
-    <p>A Node-RED node to get live value with Yoctopuce sensors (test).</p>
-
+    <p>A Node-RED node to get values from Yoctopuce sensors.</p>
+    <p>You can chose beteween live values and timed values. When <i>live value</i> is selected the node will send
+    a message as soon as the value change. The message payload will be the new value of the sensor.</p>
+     <p>When <i>timeded value</i> is selected, a message will be sent periodically. You can change the frequency
+     of timed messages from 100 per seconds to 1 per hour.</p>
+     <p>With <i>timeded value</i> values you can choose the type of data used for the payload. <tt>Average</tt>,
+     <tt>Minimum</tt> and <tt>Maximum</tt> will set the palyload to the corresponding value. If <tt>All</tt> is selected
+     the payload will be a Javascript object with the three measures plus the start and ed time of the measure. Time is
+     exprimed milliseconds since January 1, 1970 UTC.</p>
 </script>
-
-
+<!--- (generated code: YBuzzer attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YBuzzer', {
         category: 'Yoctopuce',
@@ -101,7 +174,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YBuzzer attributes declaration) -->
             command: {value: 'playNotes'},
+<!--- (generated code: YBuzzer initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -113,19 +188,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YBuzzer",
         label: function () {
-            return this.name || "YBuzzer";
+            return this.name || this.hwid || "YBuzzer";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YBuzzer initialization) -->
+<!--- (generated code: YBuzzer definitions) -->
 <script type="text/x-red" data-template-name="YBuzzer">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YBuzzer definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select  id="node-input-command" placeholder="Command">
@@ -134,20 +215,19 @@
             <option value="playNotes">Play Notes</option>
         </select>
     </div>
+<!--- (generated code: YBuzzer attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
-
-
 </script>
 <script type="text/x-red" data-help-name="YBuzzer">
     <p>A Node-RED node to control YBuzzer functions.</p>
-
 </script>
+<!--- (end of generated code: YBuzzer attributes) -->
 
 
+<!--- (generated code: YColorLed attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YColorLed', {
         category: 'Yoctopuce',
@@ -155,8 +235,10 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YColorLed attributes declaration) -->
             command: {value: 'set_rgbColor'},
             msdelay: {value: 0, validate: RED.validators.number()},
+            <!--- (generated code: YColorLed initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -168,19 +250,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YColorLed",
         label: function () {
-            return this.name || "YColorLed";
+            return this.name || this.hwid || "YColorLed";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YColorLed initialization) -->
+<!--- (generated code: YColorLed definitions) -->
 <script type="text/x-red" data-template-name="YColorLed">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YColorLed definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select id="node-input-command" placeholder="Command">
@@ -192,18 +280,19 @@
         <label for="node-input-msdelay"><i class="fa fa-tag"></i>Transition duration</label>
         <input type="text" id="node-input-msdelay" placeholder="HardwareID">
     </div>
+<!--- (generated code: YColorLed attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
 </script>
 <script type="text/x-red" data-help-name="YColorLed">
     <p>A Node-RED node to control YColorLed functions.</p>
-
 </script>
+<!--- (end of generated code: YColorLed attributes) -->
 
 
+<!--- (generated code: YColorLedCluster attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YColorLedCluster', {
         category: 'Yoctopuce',
@@ -211,7 +300,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YColorLedCluster attributes declaration) -->
             command: {value: 'startBlinkSeq'},
+            <!--- (generated code: YColorLedCluster initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -223,19 +314,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YColorLedCluster",
         label: function () {
-            return this.name || "YColorLedCluster";
+            return this.name || this.hwid || "YColorLedCluster";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YColorLedCluster initialization) -->
+<!--- (generated code: YColorLedCluster definitions) -->
 <script type="text/x-red" data-template-name="YColorLedCluster">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YColorLedCluster definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select id="node-input-command" placeholder="Command">
@@ -245,18 +342,19 @@
             <option value="set_hslColor">Set HSL color</option>
         </select>
     </div>
+<!--- (generated code: YColorLedCluster attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
 </script>
 <script type="text/x-red" data-help-name="YColorLedCluster">
     <p>A Node-RED node to control YColorLedCluster functions.</p>
-
 </script>
+<!--- (end of generated code: YColorLedCluster attributes) -->
 
 
+<!--- (generated code: YCurrentLoopOutput attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YCurrentLoopOutput', {
         category: 'Yoctopuce',
@@ -264,7 +362,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YCurrentLoopOutput attributes declaration) -->
             command: {value: 'set_current'},
+            <!--- (generated code: YCurrentLoopOutput initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -274,33 +374,40 @@
         inputs: 1,
         outputs: 0,
         icon: "yoctopuce.png",
-        paletteLabel: "YCurrentLoop",
+        paletteLabel: "YCurrentLoopOutput",
         label: function () {
-            return this.name || "YCurrentLoopOutput";
+            return this.name || this.hwid || "YCurrentLoopOutput";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YCurrentLoopOutput initialization) -->
+<!--- (generated code: YCurrentLoopOutput definitions) -->
 <script type="text/x-red" data-template-name="YCurrentLoopOutput">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YCurrentLoopOutput definitions) -->
+<!--- (generated code: YCurrentLoopOutput attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
 </script>
 <script type="text/x-red" data-help-name="YCurrentLoopOutput">
     <p>A Node-RED node to control YCurrentLoopOutput functions.</p>
-
 </script>
+<!--- (end of generated code: YCurrentLoopOutput attributes) -->
 
 
+<!--- (generated code: YDigitalIO attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YDigitalIO', {
         category: 'Yoctopuce',
@@ -308,7 +415,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YDigitalIO attributes declaration) -->
             command: {value: 'set_portState'},
+            <!--- (generated code: YDigitalIO initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -320,31 +429,38 @@
         icon: "yoctopuce.png",
         paletteLabel: "YDigitalIO",
         label: function () {
-            return this.name || "YDigitalIO";
+            return this.name || this.hwid || "YDigitalIO";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YDigitalIO initialization) -->
+<!--- (generated code: YDigitalIO definitions) -->
 <script type="text/x-red" data-template-name="YDigitalIO">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YDigitalIO definitions) -->
+<!--- (generated code: YDigitalIO attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
 </script>
 <script type="text/x-red" data-help-name="YDigitalIO">
     <p>A Node-RED node to control YDigitalIO functions.</p>
-
 </script>
+<!--- (end of generated code: YDigitalIO attributes) -->
 
 
+<!--- (generated code: YDisplay attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YDisplay', {
         category: 'Yoctopuce',
@@ -352,8 +468,10 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YDisplay attributes declaration) -->
             command: {value: 'display'},
             font: {value: 'Medium.yfm'},
+            <!--- (generated code: YDisplay initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -365,19 +483,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YDisplay",
         label: function () {
-            return this.name || "YDisplay";
+            return this.name || this.hwid || "YDisplay";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YDisplay initialization) -->
+<!--- (generated code: YDisplay definitions) -->
 <script type="text/x-red" data-template-name="YDisplay">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YDisplay definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select  id="node-input-command" placeholder="Command">
@@ -394,17 +518,19 @@
             <option value="8x8.yfm">8x8</option>
         </select>
     </div>
+<!--- (generated code: YDisplay attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
-
 </script>
 <script type="text/x-red" data-help-name="YDisplay">
     <p>A Node-RED node to control YDisplay functions.</p>
-
 </script>
+<!--- (end of generated code: YDisplay attributes) -->
 
+
+<!--- (generated code: YLed attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YLed', {
         category: 'Yoctopuce',
@@ -412,7 +538,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YLed attributes declaration) -->
             command: {value: 'set_state'},
+            <!--- (generated code: YLed initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -424,19 +552,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YLed",
         label: function () {
-            return this.name || "YLed";
+            return this.name || this.hwid || "YLed";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YLed initialization) -->
+<!--- (generated code: YLed definitions) -->
 <script type="text/x-red" data-template-name="YLed">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YLed definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select id="node-input-command" placeholder="Command">
@@ -444,16 +578,19 @@
             <option value="set_luminosity">Luminosity</option>
         </select>
     </div>
+<!--- (generated code: YLed attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
 <script type="text/x-red" data-help-name="YLed">
     <p>A Node-RED node to control YLed functions.</p>
 </script>
+<!--- (end of generated code: YLed attributes) -->
 
 
+<!--- (generated code: YPwmOutput attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YPwmOutput', {
         category: 'Yoctopuce',
@@ -461,7 +598,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YPwmOutput attributes declaration) -->
             command: {value: 'set_dutyCycle'},
+            <!--- (generated code: YPwmOutput initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -473,19 +612,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YPwmOutput",
         label: function () {
-            return this.name || "YPwmOutput";
+            return this.name || this.hwid || "YPwmOutput";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YPwmOutput initialization) -->
+<!--- (generated code: YPwmOutput definitions) -->
 <script type="text/x-red" data-template-name="YPwmOutput">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YPwmOutput definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select id="node-input-command" placeholder="Command">
@@ -493,16 +638,19 @@
             <option value="set_dutyCycle">DutyCycle</option>
         </select>
     </div>
+<!--- (generated code: YPwmOutput attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
 <script type="text/x-red" data-help-name="YPwmOutput">
     <p>A Node-RED node to control YPwmOutput functions.</p>
 </script>
+<!--- (end of generated code: YPwmOutput attributes) -->
 
 
+<!--- (generated code: YRelay attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YRelay', {
         category: 'Yoctopuce',
@@ -510,7 +658,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YRelay attributes declaration) -->
             command: {value: 'set_state'},
+            <!--- (generated code: YRelay initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -522,20 +672,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YRelay",
         label: function () {
-            return this.name || "YRelay";
+            return this.name || this.hwid || "YRelay";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
-
+<!--- (end of generated code: YRelay initialization) -->
+<!--- (generated code: YRelay definitions) -->
 <script type="text/x-red" data-template-name="YRelay">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YRelay definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select id="node-input-command" placeholder="Command">
@@ -544,16 +699,19 @@
             <option value="pulse">Pulse to state B</option>
         </select>
     </div>
+<!--- (generated code: YRelay attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
 <script type="text/x-red" data-help-name="YRelay">
     <p>A Node-RED node to control YRelay functions.</p>
 </script>
+<!--- (end of generated code: YRelay attributes) -->
 
 
+<!--- (generated code: YSerialPort attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YSerialPort', {
         category: 'Yoctopuce',
@@ -561,7 +719,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YSerialPort attributes declaration) -->
             command: {value: 'writeLine'},
+            <!--- (generated code: YSerialPort initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -573,19 +733,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YSerialPort",
         label: function () {
-            return this.name || "YSerialPort";
+            return this.name || this.hwid || "YSerialPort";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YSerialPort initialization) -->
+<!--- (generated code: YSerialPort definitions) -->
 <script type="text/x-red" data-template-name="YSerialPort">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YSerialPort definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select id="node-input-command" placeholder="Command">
@@ -597,16 +763,19 @@
             <option value="writeMODBUS">Write MODBUS</option>
         </select>
     </div>
+<!--- (generated code: YSerialPort attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
 <script type="text/x-red" data-help-name="YSerialPort">
     <p>A Node-RED node to control YSerialPort functions.</p>
 </script>
+<!--- (end of generated code: YSerialPort attributes) -->
 
 
+<!--- (generated code: YServo attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YServo', {
         category: 'Yoctopuce',
@@ -614,7 +783,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YServo attributes declaration) -->
             msdelay: {value: 0, validate: RED.validators.number()},
+            <!--- (generated code: YServo initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -626,41 +797,52 @@
         icon: "yoctopuce.png",
         paletteLabel: "YServo",
         label: function () {
-            return this.name || "YServo";
+            return this.name || this.hwid || "YServo";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YServo initialization) -->
+<!--- (generated code: YServo definitions) -->
 <script type="text/x-red" data-template-name="YServo">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YServo definitions) -->
     <div class="form-row">
         <label for="node-input-msdelay"><i class="fa fa-tag"></i>Transition duration</label>
         <input type="text" id="node-input-msdelay" placeholder="HardwareID">
     </div>
+<!--- (generated code: YServo attributes) -->
     <div class="form-row">
-        <label for="node-input-name"><i class="icon-tag"></i>Name</label>
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
 <script type="text/x-red" data-help-name="YServo">
     <p>A Node-RED node to control YServo functions.</p>
 </script>
+<!--- (end of generated code: YServo attributes) -->
 
 
+<!--- (generated code: YSpiPort attributes declaration) -->
 <script type="text/javascript">
-    RED.nodes.registerType('yoctopuce-spiport', {
+    RED.nodes.registerType('YSpiPort', {
         category: 'Yoctopuce',
         color: '#C0C0C0',
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YSpiPort attributes declaration) -->
             command: {value: 'writeHex'},
+            <!--- (generated code: YSpiPort initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -672,19 +854,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YSpiPort",
         label: function () {
-            return this.name || "YSpiPort";
+            return this.name || this.hwid || "YSpiPort";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
-<script type="text/x-red" data-template-name="yoctopuce-spiport">
+<!--- (end of generated code: YSpiPort initialization) -->
+<!--- (generated code: YSpiPort definitions) -->
+<script type="text/x-red" data-template-name="YSpiPort">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YSpiPort definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select id="node-input-command" placeholder="Command">
@@ -696,16 +884,19 @@
             <option value="writeLine">Write Line</option>
         </select>
     </div>
+<!--- (generated code: YSpiPort attributes) -->
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
-<script type="text/x-red" data-help-name="yoctopuce-spiport">
+<script type="text/x-red" data-help-name="YSpiPort">
     <p>A Node-RED node to control YSpiPort functions.</p>
 </script>
+<!--- (end of generated code: YSpiPort attributes) -->
 
 
+<!--- (generated code: YVoltageOutput attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YVoltageOutput', {
         category: 'Yoctopuce',
@@ -713,7 +904,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YVoltageOutput attributes declaration) -->
             msdelay: {value: 0, validate: RED.validators.number()},
+            <!--- (generated code: YVoltageOutput initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -723,25 +916,32 @@
         inputs: 1,
         outputs: 0,
         icon: "yoctopuce.png",
-        paletteLabel: "YVoltage",
+        paletteLabel: "YVoltageOutput",
         label: function () {
-            return this.name || "YVoltageOutput";
+            return this.name || this.hwid || "YVoltageOutput";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YVoltageOutput initialization) -->
+<!--- (generated code: YVoltageOutput definitions) -->
 <script type="text/x-red" data-template-name="YVoltageOutput">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YVoltageOutput definitions) -->
     <div class="form-row">
         <label for="node-input-msdelay"><i class="fa fa-tag"></i>Transition duration</label>
         <input type="text" id="node-input-msdelay" placeholder="HardwareID">
     </div>
+<!--- (generated code: YVoltageOutput attributes) -->
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
@@ -750,8 +950,10 @@
 <script type="text/x-red" data-help-name="YVoltageOutput">
     <p>A Node-RED node to control YVoltageOutput functions.</p>
 </script>
+<!--- (end of generated code: YVoltageOutput attributes) -->
 
 
+<!--- (generated code: YWatchdog attributes declaration) -->
 <script type="text/javascript">
     RED.nodes.registerType('YWatchdog', {
         category: 'Yoctopuce',
@@ -759,7 +961,9 @@
         defaults: {
             yoctohub: {value: '', type: "yoctohub"},
             name: {value: ''},
+<!--- (end of generated code: YWatchdog attributes declaration) -->
             command: {value: 'resetWatchdog'},
+            <!--- (generated code: YWatchdog initialization) -->
             hwid: {
                 value: '', required: true, validate: function (v) {
                     return v.length > 0;
@@ -771,19 +975,25 @@
         icon: "yoctopuce.png",
         paletteLabel: "YWatchdog",
         label: function () {
-            return this.name || "YWatchdog";
+            return this.name || this.hwid || "YWatchdog";
+        },
+        labelStyle: function() {
+            return this.name?"node_label_italic":"";
         }
     });
 </script>
+<!--- (end of generated code: YWatchdog initialization) -->
+<!--- (generated code: YWatchdog definitions) -->
 <script type="text/x-red" data-template-name="YWatchdog">
     <div class="form-row">
-        <label for="node-input-yoctohub"><i class="fa fa-tag"></i>YoctoHub</label>
+        <label for="node-input-yoctohub"><i class="fa fa-server" aria-hidden="true"></i> YoctoHub</label>
         <input type="text" id="node-input-yoctohub" placeholder="YoctoHub">
     </div>
     <div class="form-row">
-        <label for="node-input-hwid"><i class="fa fa-tag"></i>Hardware ID</label>
+        <label for="node-input-hwid"><i class="fa fa-id-card-o" aria-hidden="true"></i> Hardware ID</label>
         <input type="text" id="node-input-hwid" placeholder="HardwareID">
     </div>
+<!--- (end of generated code: YWatchdog definitions) -->
     <div class="form-row">
         <label for="node-input-command"><i class="fa fa-tag"></i>Command</label>
         <select id="node-input-command" placeholder="Command">
@@ -794,6 +1004,7 @@
             <option value="pulse">Pulse to state B</option>
         </select>
     </div>
+<!--- (generated code: YWatchdog attributes) -->
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
@@ -802,3 +1013,4 @@
 <script type="text/x-red" data-help-name="YWatchdog">
     <p>A Node-RED node to control YWatchdog functions.</p>
 </script>
+<!--- (end of generated code: YWatchdog attributes) -->

@@ -2,6 +2,14 @@ module.exports = function (RED) {
     "use strict";
     require('yoctolib-es2017/yocto_api.js');
 
+
+    async function handleHotPlug(yctx)
+    {
+        //console.log("update device list for "+yctx._uniqueID);
+        await yctx.UpdateDeviceList();
+        setTimeout(handleHotPlug,1000, yctx);
+    }
+
     function RemoteServerNode(config)
     {
         RED.nodes.createNode(this, config);
@@ -53,7 +61,8 @@ module.exports = function (RED) {
         };
 
 
-        this.connect = function () {
+
+        this.connect = async function () {
             let version = YAPI.imm_GetAPIVersion();
             node.log("Use YoctoLib " + version);
             node.log("connect to " + node.hostname);
@@ -78,6 +87,27 @@ module.exports = function (RED) {
                 }
                 node.yapi_up = true;
             });
+            await node.yctx.RegisterDeviceArrivalCallback(async function (module) {
+                let serialNumber = await module.get_serialNumber();
+                //node.log("device arrival:"+serialNumber);
+                for (let id in node.users) {
+                    if (node.users[id]) {
+                        node.users[id].updateDevList(serialNumber, true);
+                    }
+                }
+            });
+            await node.yctx.RegisterDeviceRemovalCallback(async function (module) {
+                let serialNumber = await module.get_serialNumber();
+                //node.log("device removal:"+serialNumber);
+                for (let id in node.users) {
+                    if (node.users[id]) {
+                        node.users[id].updateDevList(serialNumber, false);
+                    }
+                }
+            });
+
+            setTimeout(handleHotPlug, 5000, node.yctx);
+
 
             node.on("close", function (done) {
                 node.yapi_up = false;

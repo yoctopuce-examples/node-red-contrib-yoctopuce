@@ -75,7 +75,7 @@ module.exports = function (RED) {
 
     }
 
-    RED.nodes.registerType('YDbSplit', YDbSplit);
+    RED.nodes.registerType('YSQLHelper', YSQLHelper);
 
 
     function YDbSplit(config)

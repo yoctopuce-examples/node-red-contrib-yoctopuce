@@ -104,7 +104,7 @@
 
 
 <script type="text/javascript">
-    RED.nodes.registerType('DbSerialize', {
+    RED.nodes.registerType('YDbSplit', {
         category: 'Yoctopuce',
         color: '#E2D96E',
         defaults: {
@@ -114,9 +114,9 @@
         inputs: 1,
         outputs: 1,
         icon: "yoctopuce.png",
-        paletteLabel: "DbSerialize",
+        paletteLabel: "YDbSplit",
         label: function () {
-            return this.name || "DbSerialize";
+            return this.name || "YDbSplit";
         },
         labelStyle: function() {
             return this.name?"node_label_italic":"";
@@ -124,13 +124,13 @@
     });
 </script>
 
-<script type="text/x-red" data-template-name="DbSerialize">
+<script type="text/x-red" data-template-name="YDbSplit">
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i>Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
 </script>
 
-<script type="text/x-red" data-help-name="DbSerialize">
+<script type="text/x-red" data-help-name="YDbSplit">
     <p>A Node-RED node to build valid SQL querry.</p>
 </script>

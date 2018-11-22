@@ -75,10 +75,10 @@ module.exports = function (RED) {
 
     }
 
-    RED.nodes.registerType('YSQLHelper', YSQLHelper);
+    RED.nodes.registerType('YDbSplit', YDbSplit);
 
 
-    function DbSerialize(config)
+    function YDbSplit(config)
     {
 
         RED.nodes.createNode(this, config);
@@ -94,7 +94,7 @@ module.exports = function (RED) {
 
     }
 
-    RED.nodes.registerType('DbSerialize', DbSerialize);
+    RED.nodes.registerType('YDbSplit', YDbSplit);
 
 
 };

@@ -105,10 +105,7 @@
         oneditsave: function () {
             this.useTimeNot = $("#node-input-timed").val() === 't';
             let freq = $("#node-input-frequency").val();
-            console.log(freq);
-            let freq_str = freq + "/" + $("#node-input-frequencyUnit").val();
-            console.log(freq_str);
-            this.reportFrequency = freq_str;
+            this.reportFrequency = freq + "/" + $("#node-input-frequencyUnit").val();
         }
     });
 </script>

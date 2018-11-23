@@ -16,16 +16,18 @@ module.exports = function (RED) {
         var node = this;
         node.on('input', function (msg) {
             let sql_req;
+            let create_table_req = "CREATE TABLE IF NOT EXISTS " + node.tablename + "( timestamp INT NOT NULL, value REAL NOT NULL, hwid TEXT NOT NULL);";
             switch (node.operation) {
                 case 'insert':
+                    let creat_msg = {payload: "", topic: create_table_req};
+                    node.send(creat_msg);
                     let t;
-                    //fixme: ensure topic exist
                     if (msg.timestamp) {
                         t = msg.timestamp;
                     }else{
                         t = Date.now();
                     }
-                    sql_req = "INSERT INTO " + node.tablename + " VALUES ( " + t + ", " + msg.payload + ", \"" + msg.topic + "\")";
+                    sql_req ="INSERT INTO " + node.tablename + " VALUES ( " + t + ", " + msg.payload + ", \"" + msg.topic + "\")";
                     break;
                 case "select":
                     sql_req = "SELECT * FROM " + node.tablename;
@@ -56,7 +58,7 @@ module.exports = function (RED) {
                     }
                     break;
                 case "create":
-                    sql_req = "CREATE TABLE " + node.tablename + "( timestamp INT NOT NULL, value REAL NOT NULL, hwid TEXT NOT NULL)";
+                    sql_req = create_table_req;
                     break;
                 case "drop":
                     sql_req = "DROP TABLE " + node.tablename;

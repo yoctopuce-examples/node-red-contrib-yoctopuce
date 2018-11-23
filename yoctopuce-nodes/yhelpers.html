@@ -97,7 +97,12 @@
 </script>
 
 <script type="text/x-red" data-help-name="YFunction">
-    <p>A Node-RED node to build valid SQL querry.</p>
+    <p>A Node-RED node that generate SQL queries to add or retrieve data of a Yoctopuce sensor into or from a data base.</p>
+    <p><tt>Table Name</tt> let you specify the name of the table that will be used for SQL querry. This table has three
+    columns: hwid, timestamp, and value.</p>
+    <p>You do not need to manually create this table since it will be create automatically if it does not exist when
+    new value are inserted.</p>
+    <p>the Supported operations are INSERT, SELECT, CREATE and DROP.</p>
 </script>
 
 
@@ -132,5 +137,7 @@
 </script>
 
 <script type="text/x-red" data-help-name="YDbSplit">
-    <p>A Node-RED node to build valid SQL querry.</p>
+    <p>Usually data bases return all the records in a single message. This node split this large message with x values
+    into a series of x messages each one containing a single value. This is particularly useful if you want to connect
+    the output of a Database to an Graph.</p>
 </script>
